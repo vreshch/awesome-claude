@@ -56,6 +56,20 @@ const PRIVACY_NOTE_REQUIRED_FLAGS = new Set([
 
 const UNSAFE_FRONTMATTER_LANGUAGE_ERROR =
   "Executable JavaScript frontmatter is not allowed in content policy validation";
+const FINANCIAL_OR_IDENTITY_PATTERN =
+  /\b(private key|wallet|kyc|usdc|x402|payment|crypto|on-chain)\b/i;
+const SENSITIVE_ATTESTATION_FORWARD_TERMS =
+  "wallet|kyc|payment|crypto|on-chain identity|personal identity|identity proof|identity verification|proof of personhood|verifiable credential|passport|government id|government-issued id|govt id|biometric";
+const SENSITIVE_ATTESTATION_REVERSE_TERMS =
+  "wallet|kyc|payment|crypto|on-chain identity|identity|personal identity|identity proof|identity verification|proof of personhood|verifiable credential|passport|government id|government-issued id|govt id|biometric";
+const IDENTITY_ATTESTATION_PATTERN = new RegExp(
+  `\\battestations?\\b[\\s\\S]{0,120}\\b(?:${SENSITIVE_ATTESTATION_FORWARD_TERMS})s?\\b`,
+  "i",
+);
+const IDENTITY_ATTESTATION_REVERSE_PATTERN = new RegExp(
+  `\\b(?:${SENSITIVE_ATTESTATION_REVERSE_TERMS})s?\\b[\\s\\S]{0,120}\\battestations?\\b`,
+  "i",
+);
 const DEFENSIVE_SECURITY_MITIGATION_PATTERN =
   /\b(prevent|protect|warn(?:s|ing)? before|block|detect|detection|redact|sanitize|audit|review|remediate|remediation|hardening|least privilege|safe configuration|avoid (?:pasting|exposing|leaking)|leak warning)\b[\s\S]{0,160}\b(?:(?:credential|password|cookie|session|token|wallet|secret|leak)s?|expos(?:e|ing|ure))\b|\b(?:credential|password|cookie|session|token|wallet|secret)s?\b[\s\S]{0,160}\b(prevent|protect|warn(?:s|ing)? before|block|detect|detection|redact|sanitize|audit|review|remediate|remediation|hardening|least privilege|safe configuration|avoid (?:pasting|exposing|leaking)|leak warning)\b/i;
 const RESOURCE_THEFT_CAPABILITY_PATTERN =
@@ -152,6 +166,14 @@ function hasDefensiveSecuritySafeHarbor(text) {
     !CREDENTIAL_THEFT_DESTINATION_PATTERN.test(text) &&
     !EXPLICIT_CREDENTIAL_STEALING_PATTERN.test(text) &&
     !ABUSE_ENABLEMENT_PATTERN.test(text)
+  );
+}
+
+function hasFinancialOrIdentitySensitiveSignal(text) {
+  return (
+    FINANCIAL_OR_IDENTITY_PATTERN.test(text) ||
+    IDENTITY_ATTESTATION_PATTERN.test(text) ||
+    IDENTITY_ATTESTATION_REVERSE_PATTERN.test(text)
   );
 }
 
@@ -955,11 +977,7 @@ function addContentRiskSignals(report, fields, content) {
     );
   }
 
-  if (
-    /\b(private key|wallet|kyc|usdc|x402|payment|crypto|on-chain|attestation)\b/i.test(
-      text,
-    )
-  ) {
+  if (hasFinancialOrIdentitySensitiveSignal(text)) {
     addFlag(
       report,
       "high",
