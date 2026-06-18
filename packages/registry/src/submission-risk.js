@@ -103,6 +103,8 @@ function isLoopbackHttpUrl(value) {
 }
 const CREDENTIAL_THEFT_PATTERN =
   /\b(credential|password|cookie|session|token|wallet)s?\b[\s\S]{0,80}\b(steals?|exfiltrat(?:e|es|ing|ion)|harvests?|dumps?)\b|\b(steals?|exfiltrat(?:e|es|ing|ion)|harvests?|dumps?)\b[\s\S]{0,80}\b(credential|password|cookie|session|token|wallet)s?\b/i;
+const DEFENSIVE_THEFT_INTERDICTION_PATTERN =
+  /\b(?:detects?|blocks?|prevents?|warns? before)\b[\s\S]{0,120}\b(?:commands?|patterns?|attempts?|requests?|prompts?|output)\b[\s\S]{0,120}\b(?:steals?|exfiltrat(?:e|es|ing|ion)|harvests?|dumps?)\b[\s\S]{0,80}\b(?:credential|password|cookie|session|token|wallet)s?\b|\b(?:commands?|patterns?|attempts?|requests?|prompts?|output)\b[\s\S]{0,120}\b(?:steals?|exfiltrat(?:e|es|ing|ion)|harvests?|dumps?)\b[\s\S]{0,80}\b(?:credential|password|cookie|session|token|wallet)s?\b[\s\S]{0,120}\b(?:blocks?|prevents?|before they run)\b/i;
 const CREDENTIAL_THEFT_DESTINATION_PATTERN =
   /\b(credential|password|cookie|session|token|wallet)s?\b[\s\S]{0,80}\b(steals?|exfiltrat(?:e|es|ing|ion)|harvests?|dumps?)\b[\s\S]{0,120}\b(?:to|into|via|through|over|using|at)\b[\s\S]{0,40}\b(webhooks?|remote servers?|external endpoints?|third[- ]part(?:y|ies)|apis?|https?:\/\/)\b|\b(steals?|exfiltrat(?:e|es|ing|ion)|harvests?|dumps?)\b[\s\S]{0,80}\b(credential|password|cookie|session|token|wallet)s?\b[\s\S]{0,120}\b(?:to|into|via|through|over|using|at)\b[\s\S]{0,40}\b(webhooks?|remote servers?|external endpoints?|third[- ]part(?:y|ies)|apis?|https?:\/\/)\b/i;
 const EXPLICIT_CREDENTIAL_STEALING_PATTERN =
@@ -162,8 +164,11 @@ function hasFinancialOrIdentitySensitiveSignal(text) {
 }
 
 function hasDefensiveSecuritySafeHarbor(text) {
+  const hasCredentialTheftWording = CREDENTIAL_THEFT_PATTERN.test(text);
   return (
     DEFENSIVE_SECURITY_MITIGATION_PATTERN.test(text) &&
+    (!hasCredentialTheftWording ||
+      DEFENSIVE_THEFT_INTERDICTION_PATTERN.test(text)) &&
     !RESOURCE_THEFT_CAPABILITY_PATTERN.test(text) &&
     !CREDENTIAL_THEFT_DESTINATION_PATTERN.test(text) &&
     !EXPLICIT_CREDENTIAL_STEALING_PATTERN.test(text) &&
