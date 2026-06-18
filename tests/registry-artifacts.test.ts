@@ -723,6 +723,18 @@ describe("registry artifacts", () => {
         },
       }),
     };
+    const arbitraryStdioEntry = {
+      ...baseEntry,
+      slug: "arbitrary-stdio-fixture",
+      configSnippet: JSON.stringify({
+        mcpServers: {
+          local: {
+            command: "python3",
+            args: ["server.py"],
+          },
+        },
+      }),
+    };
     const manualEntry = {
       ...baseEntry,
       slug: "manual-fixture",
@@ -733,6 +745,7 @@ describe("registry artifacts", () => {
     const raycastEntries = buildRaycastEnvelope([
       stdioEntry,
       sseEntry,
+      arbitraryStdioEntry,
       manualEntry,
     ] as any).entries;
     const stdioFeedEntry = raycastEntries.find(
@@ -744,7 +757,11 @@ describe("registry artifacts", () => {
     const manualFeedEntry = raycastEntries.find(
       (entry) => entry.slug === "manual-fixture",
     );
+    const arbitraryStdioFeedEntry = raycastEntries.find(
+      (entry) => entry.slug === "arbitrary-stdio-fixture",
+    );
     const stdioDetail = buildRaycastDetail(stdioEntry as any);
+    const arbitraryStdioDetail = buildRaycastDetail(arbitraryStdioEntry as any);
     const manualDetail = buildRaycastDetail(manualEntry as any);
 
     expect(stdioFeedEntry).toMatchObject({
@@ -759,6 +776,16 @@ describe("registry artifacts", () => {
       "cursor",
       "antigravity",
     ]);
+    expect(arbitraryStdioFeedEntry).toMatchObject({
+      installable: false,
+      hasInstallCommand: false,
+      hasConfigSnippet: false,
+    });
+    expect(arbitraryStdioFeedEntry).not.toHaveProperty("mcpInstallTargets");
+    expect(arbitraryStdioDetail.configSnippet).toBe("");
+    expect(String(arbitraryStdioDetail.detailMarkdown)).not.toContain(
+      "## Config",
+    );
     expect(manualFeedEntry).toMatchObject({
       installable: true,
       hasInstallCommand: true,
